@@ -10,13 +10,13 @@ function fn(y) {
 /**feat: 在1秒后，执行函数fn，并让其this指向o */
 
 /**bad: fn函数中的this是指向window的，而且也没有传递参数 */
-setTimeout(fn, 1000);
+// setTimeout(fn, 1000);
 
 /**bad: this 指向依然是window, 而且相当于立即执行fn函数, 并且把结果赋值给定时器, 一秒后再执行, 这样肯定不行 */
-setTimeout(fn(200), 1000);
+// setTimeout(fn(200), 1000);
 
 /**bad: 使用call或者apply虽然改变了this指向, 但是都是函数立即执行并把返回结果赋给了定时器*/
-setTimeout(fn.call(o, 200), 1000);
+// setTimeout(fn.call(o, 200), 1000);
 
 /**
  * good: 用一个匿名函数包装起来, 等到1秒后执行匿名函数里边的代码
@@ -46,3 +46,4 @@ function bind(func, ctx, ...args) {
     func.call(ctx, ...args);
   };
 }
+setTimeout(bind(fn, o, 200), 1000)
