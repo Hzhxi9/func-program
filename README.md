@@ -158,3 +158,144 @@ arr; // [1, 2, 3]
 2. 函数式编程采用声明式的风格，易于推理，提高代码的可读性。
 3. 函数式编程将函数视为积木，通过一等高阶函数来提高代码的模块化和可重用性。
 4. 可以利用响应式编程组合各个函数来降低事件驱动程序的复杂性。
+
+三、组合函数
+
+组合是一种为软件的行为，进行清晰建模的一种简单、优雅而富于表现力的方式。
+通过组合小的、确定性的函数，来创建更大的软件组件和功能的过程，会生成更容易组织、理解、调试、扩展、测试和维护的软件。
+
+比如我们现在流行的 SPA (单页面应用)，都会有组件的概念。
+
+为什么要有组件的概念呢？
+
+因为它的目的就是想让你把一些通用的功能或者元素组合抽象成可重用的组件，就算不通用，你在构建一个复杂页面的时候也可以拆分成一个个具有简单功能的组件，然后再组合成你满足各种需求的页面。
+
+其实我们函数式编程里面的组合也是类似，函数组合就是一种将已被分解的简单任务组织成复杂的整体过程。
+
+现在我们有这样一个需求：给你一个字符串，将这个字符串转化成大写，然后逆序。
+
+```js
+var str = 'function program';
+
+/**一行代码搞定*/
+function oneLine(str) {
+  return str.toUpperCase().split('').reverse().join('');
+}
+
+/** 或者按要求一步一步来，先转成大写，然后逆序*/
+function multiLine(str) {
+  var upperStr = str.toUpperCase();
+  var res = upperStr.split('').reverse().join('');
+  return res;
+}
+
+console.log(oneLine(str)); // MARGORP NOITCNUF
+console.log(multiLine(str)); // MARGORP NOITCNUF
+```
+
+用函数式编程的方式来写
+
+那么我们如果把最开始的需求代码写成这个样子，以函数式编程的方式来写。
+
+```js
+var str = 'function program';
+
+function stringToUpper(str) {
+  return str.toUpperCase();
+}
+
+function stringReverse(str) {
+  return str.split('').reverse().join('');
+}
+
+var toUpperAndReverse = 组合(stringReverse, stringToUpper);
+var res = toUpperAndReverse(str);
+```
+
+那么当我们需求变化的时候，我们根本不需要修改之前封装过的东西。
+
+```js
+// 把字符串大写之后，把每个字符拆开之后组装成一个数组，比如 ’aaa‘ 最终会变成 [A, A, A]。
+var str = 'function program';
+
+function stringToUpper(str) {
+  return str.toUpperCase();
+}
+
+function stringReverse(str) {
+  return str.split('').reverse().join('');
+}
+
+function stringToArray(str) {
+  return str.split('');
+}
+
+var toUpperAndArray = 组合(stringToArray, stringToUpper);
+toUpperAndArray(str);
+```
+
+把字符串大写之后，再翻转，再转成数组
+
+```js
+var str = 'function program';
+
+function stringToUpper(str) {
+  return str.toUpperCase();
+}
+
+function stringReverse(str) {
+  return str.split('').reverse().join('');
+}
+
+function stringToArray(str) {
+  return str.split('');
+}
+
+var strUpperAndReverseAndArray = 组合(stringToArray, stringReverse, stringToUpper);
+strUpperAndReverseAndArray(str);
+```
+
+发现并没有更换你之前封装的代码，只是更换了函数的组合方式。
+
+可以看到，组合的方式是真的就是抽象单一功能的函数，然后再组成复杂功能。这种方式既锻炼了你的抽象能力，也给维护带来巨大的方便。
+
+首先我们可以知道，这是一个函数，同时参数也是函数，返回值也是函数。
+
+怎么将两个函数进行组合呢？
+
+根据上面说的，参数和返回值都是函数，那么我们可以确定函数的基本结构如下(顺便把组合换成英文的 compose)。
+
+```js
+/**将两个函数合成*/
+function twoFunctionCompose(fn1, fn2) {
+  return function (arg) {
+    return fn1(fn2(arg));
+  };
+}
+
+/**多个函数的情况*/
+function compose(...args) {
+  return result =>
+    reduceRight((result, fn) => {
+      return fn(result);
+    }, result);
+}
+```
+
+实现 compose 的方式很多, 可以参考[实现 compose 的五种思路](https://segmentfault.com/a/1190000011447164)
+
+> 注意：要传给 compose 函数是有规范的，首先函数的执行是从最后一个参数开始执行，一直执行到第一个，而且对于传给 compose 作为参数的函数也是有要求的，必须只有一个形参，而且函数的返回值是下一个函数的实参。
+
+对于 compose 从最后一个函数开始求值的方式如果你不是很适应的话，你可以通过 pipe 函数来从左到右的方式。
+
+实现跟 compose 差不多，只是把参数的遍历方式从右到左(reduceRight)改为从左到右(reduce)。
+
+```js
+function pipe(...args) {
+  return result => {
+    return args.reduce((result, fn) => {
+      return fn(result);
+    }, result);
+  };
+}
+```
