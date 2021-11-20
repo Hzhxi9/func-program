@@ -467,4 +467,77 @@ function currying(fn, ...args) {
 
 可以看到其实一个通用的柯里化函数核心思想是非常的简单，代码也非常简洁，而且还支持在一次调用的时候可以传多个参数(但是这种传递多个参数跟柯里化的定义不是很合，所以可以作为一种柯里化的变种)。
 
-> 我这里重点不是讲柯里化的实现，所以没有写得很健壮，更强大的柯里化函数可见羽讶的：[JavaScript专题之函数柯里化](https://segmentfault.com/a/1190000010608477)。
+> 我这里重点不是讲柯里化的实现，所以没有写得很健壮，更强大的柯里化函数可见羽讶的：[JavaScript 专题之函数柯里化](https://segmentfault.com/a/1190000010608477)。
+
+六、部分应用
+
+部分应用是一种通过将函数的不可变参数子集，初始化为固定值来创建更小元数函数的操作。简单来说，如果存在一个具有五个参数的函数，给出三个参数后，就会得到一个、两个参数的函数。
+
+看到上面的定义可能你会觉得这跟柯里化很相似，都是用来缩短函数参数的长度，所以如果理解了柯里化，理解部分应用是非常的简单：
+
+```js
+function debug(type, firstArg, secondArg) {
+  if (type === 'log') console.log(firstArg, secondArg);
+  else if (type === 'info') console.log(firstArg, secondArg);
+  else if (type === 'warn') console.log(firstArg, secondArg);
+  else console.log(firstArg, secondArg);
+}
+const logDebug = 部分应用(debug, 'log');
+const infoDebug = 部分应用(debug, 'info');
+const warnDebug = 部分应用(debug, 'warn');
+const errDebug = 部分应用(debug, 'error');
+
+logDebug('log:', '测试部分应用');
+infoDebug('info:', '测试部分应用');
+warnDebug('warn:', '测试部分应用');
+errDebug('error:', '测试部分应用');
+```
+
+debug 方法封装了我们平时用 console 对象调试的时候各种方法，本来是要传三个参数，我们通过部分应用的封装之后，我们只需要根据需要调用不同的方法，传必须的参数就可以了。
+
+我这个例子可能你会觉得没必要这么封装，根本没有减少什么工作量，但是如果我们在 debug 的时候不仅是要打印到控制台，还要把调试信息保存到数据库，或者做点其他的，那是不是这个封装就有用了。
+
+因为部分应用也可以减少参数，所以他在我们进行编写组合函数的时候也占有一席之地，而且可以更快传递需要的参数，留下为了 compose 传递的参数，这里是跟柯里化比较，因为柯里化按照定义的话，一次函数调用只能传一个参数，如果有四五个参数就需要:
+
+```js
+function add(a, b, c, d) {
+  return a + b + c + d;
+}
+
+// 使用柯里化方式来使 add 转化为一个一元函数
+let addPreThreeCurry = currying(add)(1)(2)(3);
+addPreThree(4); // 10
+```
+
+这种连续调用(这里所说的柯里化是按照定义的柯里化，而不是我们写的柯里化变种)，但是用部分应用就可以:
+
+```js
+// 使用部分应用的方式使 add 转化为一个一元函数
+const addPreThreePartial = 部分应用(add, 1, 2, 3);
+addPreThree(4); // 10
+```
+
+既然我们现在已经明白了部分应用这个函数的作用了，那么还是来实现一个吧，真的是非常的简单：
+
+```js
+// 通用的部分应用函数的核心实现
+function partial(fn, ...args) {
+  return (..._arg) => {
+    return fn(...args, ..._arg);
+  };
+}
+```
+
+另外不知道你有没有发现，这个部分应用跟 JavaScript 里面的 bind 函数很相似，都是把第一次穿进去的参数通过闭包存在函数里，等到再次调用的时候再把另外的参数传给函数，只是部分应用不用指定 this，所以也可以用 bind 来实现一个部分应用函数。
+
+```js
+// 通用的部分应用函数的核心实现
+function partial(fn, ...args) {
+  return fn.bind(null, ...args);
+}
+```
+
+另外可以看到实际上柯里化和部分应用确实很相似，所以这两种技术很容易被混淆。它们主要的区别在于参数传递的内部机制与控制：
+
+- 柯里化在每次分布调用时都会生成嵌套的一元函数。在底层 ，函数的最终结果是由这些一元函数逐步组合产生的。同时，curry 的变体允许同时传递一部分参数。因此，可以完全控制函数求值的时间与方式。
+- 部分应用将函数的参数与一些预设值绑定(赋值)，从而产生一个拥有更少参数的新函数。改函数的闭包中包含了这些已赋值的参数，在之后的调用中被完全求值。
