@@ -299,3 +299,172 @@ function pipe(...args) {
   };
 }
 ```
+
+四、 point-free
+
+tacit programming，也被称作为 point-free，point 表示的就是形参，意思大概就是没有形参的编程风格。
+
+```js
+/**这就是有参的，因为 word 这个形参*/
+var snakeCase = word => word.toLowerCase().replace(/\s+/gi, '_');
+
+/**这是 point-free，没有任何形参*/
+var snakeCase = compose(replace(/\s+/gi, '_'), toLowerCase);
+```
+
+有参的函数的目的是得到一个数据，而 point-free 的函数的目的是得到另一个函数。
+
+那这 point-free 有什么用？
+
+它可以让我们把注意力集中在函数上，参数命名的麻烦肯定是省了，代码也更简洁优雅。
+
+需要注意的是，一个 point-free 的函数可能是由众多非 point-free 的函数组成的，
+
+也就是说底层的基础函数大都是有参的 point-free 体现在用基础函数组合而成的高级函数上
+
+这些高级函数往往可以作为我们的业务函数，通过组合不同的基础函数构成我们的复制的业务逻辑。
+
+可以说 point-free 使我们的编程看起来更美，更具有声明式，这种风格算是函数式编程里面的一种追求，一种标准，我们可以尽量的写成 point-free，但是不要过度的使用，任何模式的过度使用都是不对的。
+
+五、柯里化
+
+> 柯里化: ，又译为卡瑞化或加里化，是把接受多个参数的函数变换成接受一个单一参数（最初函数的第一个参数）的函数，并且返回接受余下的参数而且返回结果的新函数的技术。
+
+在定义中获取两个比较重要的信息：
+
+- 接收一个单一参数
+- 返回结果是函数
+
+这两个要点不是 compose 函数参数的要求么，而且可以将多个参数的函数转换成接受单一参数的函数，岂不是可以解决我们再上面提到的基础函数如果是多个参数不能用的问题，所以这就很清楚了柯里化函数的作用了。
+
+具体例子:
+
+比如你有一间士多店并且你想给你优惠的顾客给个 10% 的折扣（即打九折）：
+
+```js
+function discount(price, discount) {
+  return price * discount;
+}
+```
+
+当一位优惠的顾客买了一间价值$500 的物品，你给他打折：
+
+```js
+const price = discount(500, 0, 1); // 50
+```
+
+你可以预见，从长远来看，我们会发现自己每天都在计算 10% 的折扣：
+
+```js
+const price = discount(1500, 0.1); // $150
+const price = discount(2000, 0.1); // $200
+// ... 等等很多
+```
+
+我们可以将 discount 函数柯里化，这样我们就不用总是每次增加这 0.10 的折扣。
+
+```js
+/**
+ * 这个就是一个柯里化函数，将本来两个参数的 discount ，
+ * 转化为每次接收单个参数完成求
+ **/
+function discountCurry(discount) {
+  return price => price * discount;
+}
+const tenPercentDiscount = discountCurry(0.1);
+```
+
+现在，我们可以只计算你的顾客买的物品都价格了：
+
+```js
+tenPercentDiscount(500); // $50
+```
+
+同样地，有些优惠顾客比一些优惠顾客更重要-让我们称之为超级客户。
+并且我们想给这些超级客户提供 20% 的折扣。 可以使用我们的柯里化的 discount 函数：
+
+```js
+const twentyPercentDiscount = discountCurry(0.2);
+```
+
+我们通过这个柯里化的 discount 函数折扣调为 0.2（即 20%），给我们的超级客户配置了一个新的函数。
+
+返回的函数 twentyPercentDiscount 将用于计算我们的超级客户的折扣：
+
+```js
+twentyPercentDiscount(500); // 100
+```
+
+柯里化在函数式编程里面的应用
+
+现在我们有这么一个需求：给定的一个字符串，先翻转，然后转大写，找是否有 TAOWENG，如果有那么就输出 yes，否则就输出 no。
+
+```js
+function stringToUpper(str) {
+  return str.toUpperCase();
+}
+function stringReverse(str) {
+  return str.split('').reverse().join('');
+}
+function find(str, targetStr) {
+  return str.includes(targetStr);
+}
+function judge(is) {
+  console.log(is ? 'yes' : 'no');
+}
+```
+
+我们很容易就写出了这四个函数，前面两个是上面就已经写过的，然后 find 函数也很简单，现在我们想通过 compose 的方式来实现 point-free，但是我们的 find 函数要接受两个参数，不符合 compose 参数的规定，这个时候我们像前面一个例子一样，把 find 函数柯里化一下，然后再进行组合：
+
+```js
+/**柯里化 find 函数*/
+function findCurry(targetStr) {
+  return str => str.includes(targetStr);
+}
+const findTaoweng = findCurry('TAOWENG');
+const result = compose(judge, findTaoweng, stringReverse, stringToUpper);
+```
+
+看到这里是不是可以看到柯里化在达到 pointfree 是非常的有用，较少参数，一步一步的实现我们的组合。
+
+但是通过上面那种方式柯里化需要去修改以前封装好的函数，这也是破坏了开闭原则，而且对于一些基础函数去把源码修改了，其他地方用了可能就会有问题，所以我们应该写一个函数来手动柯里化。
+
+根据定义之前对柯里化的定义，以及前面两个柯里化函数，我们可以写一个二元(参数个数为 2)的通用柯里化函数：
+
+```js
+function twoCurry(fn) {
+  // 第一次调用获得第一个参数
+  return function (firstArg) {
+    // 第二次调用获得第二个参数
+    return function (secondArg) {
+      // 将两个参数应用到函数 fn 上
+      return fn(firstArg, secondArg);
+    };
+  };
+}
+```
+
+所以上面的 findCurry 就可以通过 twoCurry 来得到：
+
+```js
+const findCurry = twoCurry(find);
+```
+
+这样我们就可以不更改封装好的函数，也可以使用柯里化，然后进行函数组合。不过我们这里只实现了二元函数的柯里化，要是三元，四元是不是我们又要要写三元柯里化函数，四元柯里化函数呢，其实我们可以写一个通用的 n 元柯里化。
+
+```js
+function currying(fn, ...args) {
+  if (args.length >= fn.length) {
+    return fn(...args);
+  }
+  return function (...args2) {
+    return currying(fn, ...args, ...args2);
+  };
+}
+```
+
+我这里采用的是递归的思路，当获取的参数个数大于或者等于 fn 的参数个数的时候，就证明参数已经获取完毕，所以直接执行 fn 了，如果没有获取完，就继续递归获取参数。
+
+可以看到其实一个通用的柯里化函数核心思想是非常的简单，代码也非常简洁，而且还支持在一次调用的时候可以传多个参数(但是这种传递多个参数跟柯里化的定义不是很合，所以可以作为一种柯里化的变种)。
+
+> 我这里重点不是讲柯里化的实现，所以没有写得很健壮，更强大的柯里化函数可见羽讶的：[JavaScript专题之函数柯里化](https://segmentfault.com/a/1190000010608477)。
