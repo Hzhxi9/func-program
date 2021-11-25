@@ -1,12 +1,16 @@
-const compose = require('./index');
+let compose = require('./index.js')
 
-const init = (...args) => args.reduce((acc, cur) => acc + cur, 0);
-const step2 = val => val + 2;
-const step3 = val => val + 3;
-const step4 = val => val + 4;
 
-const steps = [step4, step3, step2, init];
+let init = (...args) => args.reduce((ele1, ele2) => ele1 + ele2, 0)
+// var step1 = (...args) => 1
+let step2 = (val) => val + 2
+let step3 = (val) => val + 3
+let step4 = (val) => val + 4
 
-const fn = compose(...steps);
+steps = [step4, step3, step2, init]
 
-console.log(fn(1, 2, 3))
+let composeFunc = compose(...steps)
+// let composeFunc = compose(step4, step3, step2, init)
+
+console.log(composeFunc(1, 2, 3))
+// 15

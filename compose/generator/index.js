@@ -12,23 +12,26 @@
 
 /**generator 构建 */
 function* iterateSteps(steps) {
-  let n;
-  for (let i = 0, len = steps.length; i < len; i++) {
-    if (n) n = yield steps[i].call(null, n);
-    else n = yield;
+  let n
+  for (let i = 0; i < steps.length; i++) {
+    if (n) {
+      n = yield steps[i].call(null, n)
+    } else {
+      n = yield
+    }
   }
 }
 
-/**compose 实现 */
-const compose = function (...steps) {
-  const g = iterateSteps(steps);
-  return function (...args) {
-    /**第一个值 */
-    const val = steps.pop().apply(null, args);
-    /**因为无法传参数 所以无所谓执行 就是空耗一个yield */
-    g.next();
-    return steps.reverse.reduce((val, val1) => g.next(val).value, val);
-  };
+const compose = function(...steps) {
+  let g = iterateSteps(steps)
+  return function(...args) {
+    let val = steps.pop().apply(null, args)
+    // 这里是第一个值
+    console.log(val)
+    // 因为无法传参数 所以无所谓执行 就是空耗一个yield
+    g.next()
+    return steps.reverse().reduce((val, val1) => g.next(val).value, val)
+  }
 }
 
 module.exports = compose
