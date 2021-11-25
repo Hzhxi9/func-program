@@ -20,14 +20,14 @@ function* iterateSteps(steps) {
 }
 
 /**compose 实现 */
-function compose(...steps) {
+const compose = function (...steps) {
   const g = iterateSteps(steps);
   return function (...args) {
     /**第一个值 */
     const val = steps.pop().apply(null, args);
     /**因为无法传参数 所以无所谓执行 就是空耗一个yield */
     g.next();
-    return steps.reverse().reduce((val, val1) => g.next(val).value, val);
+    return steps.reverse.reduce((val, val1) => g.next(val).value, val);
   };
 }
 

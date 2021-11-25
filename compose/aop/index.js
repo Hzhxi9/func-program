@@ -24,7 +24,7 @@ Function.prototype.after = function (fn) {
   const self = this;
   return function (...args) {
     const result = self.apply(null, args);
-    return fn.apply(null, result);
+    return fn.call(null, result);
   };
 };
 
