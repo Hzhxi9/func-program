@@ -88,7 +88,7 @@ function showStudent(id) {
     throw new Error('not fount');
   }
 }
-showStudent('666)
+showStudent('666')
 
 /**函数式*/
 
