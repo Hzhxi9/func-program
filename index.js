@@ -63,10 +63,24 @@ const strToUpper = str => str.toUpperCase();
 const strToReverse = str => str.split('').reverse().join('');
 
 /**转数组 */
-const strToArray = str => str.split('')
+const strToArray = str => str.split('');
+
+/**组合辅助 */
+const compose = function (...funcs) {
+  return function (...args) {
+    const len = args.length;
+    if (len === 0) return args;
+    if (len === 1) return funcs[0](...args);
+    return funcs.reduce((acc, cur) => {
+      return typeof x === 'function'? cur(acc(...args)): cur(acc)
+    })
+  };
+};
 
 /**组合 */
 const toUpperAndReverse = compose(strToReverse, strToUpper);
 
 /**调用 */
 const res = toUpperAndReverse(str);
+
+console.log(res, '==res==')

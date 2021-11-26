@@ -1,22 +1,3 @@
-/**bad */
-
-const fn1 = x => x + 10;
-const fn2 = x => x * 10;
-const fn3 = x => x / 10;
-
-console.log(fn3(fn1(fn2(fn1(6)))));
-
-/**
- * 拆分出来
- * 即把前一个函数的运行结果赋值给后一个函数
- */
-let x = fn1(6);
-x = fn2(x);
-x = fn1(x);
-x = fn3(x);
-
-console.log(x);
-
 /**
  * 用一个函数解决问题 => compose(fn1, fn2, fn1, fn3)(6)
  * 函数调用的扁平化，即把层级嵌套的那种函数调用(一个函数的运行结果当作实参传给下一个函数的这种操作)扁平化
@@ -41,20 +22,5 @@ function compose(...funcs) {
     });
   };
 }
-console.log(compose(fn1, fn2, fn1, fn3)(6));
 
-/**
- * redux源码中的compos
- * 它执行的顺序是函数集合中的函数从后往前执行
- */
-function redux_compose(...funcs) {
-  const len = funcs.length;
-  if (len === 0) return args => args;
-  if (len === 1) return funcs[0];
-  return funcs.reduce(
-    (a, b) =>
-      (...args) =>
-        a(b(...args))
-  );
-}
-console.log(redux_compose(fn3, fn1, fn2, fn1)(6));
+module.exports = compose
