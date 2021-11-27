@@ -15,8 +15,8 @@ const fn1 = value => value + 1;
 const fn2 = value => value + 2;
 const fn3 = value => value + 3;
 
-const funcs = [fn3, fn2, fn1, init];
+const fns = [fn3, fn2, fn1, init]
 
-const f = compose(...funcs);
+const com = compose(...fns)
 
-console.log(f(1, 2, 3));
+console.log(com(1, 2, 3))

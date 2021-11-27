@@ -65,7 +65,7 @@ const strToReverse = str => str.split('').reverse().join('');
 /**转数组 */
 const strToArray = str => str.split('');
 
-/**组合辅助 */
+/**组合辅助 */ 
 const compose = function (...funcs) {
   return function (...args) {
     const len = args.length;
