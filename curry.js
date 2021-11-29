@@ -59,6 +59,6 @@ function sum(...args) {
   return args.reduce((acc, cur) => acc + cur, 0);
 }
 
-const sumCurring = currying(sum, 1, 2, 3)
+const sumCurring = currying(sum, 1, 2, 3, 6)
 
 console.log(sumCurring)
